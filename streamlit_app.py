@@ -1,151 +1,79 @@
 import streamlit as st
-import pandas as pd
 import math
-from pathlib import Path
 
-# Set the title and favicon that appear in the Browser's tab bar.
+# Configuración de la página
 st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+    page_title='Bot Médico',
+    page_icon=':hospital:', # Ícono relacionado con el tema médico
 )
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
-
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
-
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
-
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
-
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
-
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
-
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
+# Título del bot médico
 '''
-# :earth_americas: GDP dashboard
+# :hospital: Bot Médico Inteligente
 
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
+Simulador de preguntas y respuestas médicas. Esta herramienta permite obtener respuestas a preguntas médicas ficticias con fines demostrativos.
 '''
 
-# Add some spacing
+# Espacio extra para estéticamente separar el contenido
 ''
 ''
 
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
+# Simulador de la selección de preguntas médicas
+pregunta_tipo = st.selectbox(
+    'Seleccione el tipo de pregunta que desea simular:',
+    ['Preguntas simples (Wikipedia)', 'Preguntas complejas (Mayo Clinic)']
 )
 
-''
-''
+pregunta_simulada = st.selectbox(
+    'Seleccione una pregunta para mostrar la respuesta simulada:',
+    ['¿Qué es la gripe?', 
+     '¿Cuáles son los síntomas del resfriado común?', 
+     '¿Cómo prevenir la gripe?', 
+     '¿Qué causa el dolor de cabeza?',
+     '¿Qué es la diabetes tipo 2?', 
+     '¿Cuáles son los síntomas de un ataque al corazón?', 
+     '¿Qué tratamientos existen para la hipertensión?', 
+     '¿Cuáles son los síntomas del cáncer de pulmón?']
+)
 
+# Espacio para mostrar la respuesta simulada según la pregunta seleccionada
+if pregunta_simulada == '¿Qué es la gripe?':
+    st.write("**Respuesta**: La gripe es una infección viral que afecta principalmente al sistema respiratorio. Se transmite a través del aire cuando una persona infectada tose o estornuda.")
+elif pregunta_simulada == '¿Cuáles son los síntomas del resfriado común?':
+    st.write("**Respuesta**: Los síntomas del resfriado común incluyen congestión nasal, dolor de garganta, estornudos, tos y dolor de cabeza.")
+elif pregunta_simulada == '¿Cómo prevenir la gripe?':
+    st.write("**Respuesta**: Para prevenir la gripe, se recomienda la vacunación anual, lavarse las manos con frecuencia y evitar el contacto cercano con personas infectadas.")
+elif pregunta_simulada == '¿Qué causa el dolor de cabeza?':
+    st.write("**Respuesta**: El dolor de cabeza puede ser causado por estrés, deshidratación, tensión muscular o factores ambientales como la falta de sueño.")
+elif pregunta_simulada == '¿Qué es la diabetes tipo 2?':
+    st.write("**Respuesta**: La diabetes tipo 2 es una afección en la que el cuerpo no usa la insulina adecuadamente, lo que causa niveles altos de glucosa en sangre. Es común en adultos y se puede controlar con dieta, ejercicio y medicamentos.")
+elif pregunta_simulada == '¿Cuáles son los síntomas de un ataque al corazón?':
+    st.write("**Respuesta**: Los síntomas de un ataque al corazón incluyen dolor en el pecho, dificultad para respirar, sudoración excesiva y malestar en el brazo izquierdo o la mandíbula.")
+elif pregunta_simulada == '¿Qué tratamientos existen para la hipertensión?':
+    st.write("**Respuesta**: Los tratamientos comunes para la hipertensión incluyen cambios en la dieta, ejercicio regular, reducción del estrés y medicamentos antihipertensivos.")
+elif pregunta_simulada == '¿Cuáles son los síntomas del cáncer de pulmón?':
+    st.write("**Respuesta**: Los síntomas del cáncer de pulmón pueden incluir tos persistente, dolor en el pecho, pérdida de peso inexplicada, y dificultad para respirar.")
 
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
+# Espacio para métricas adicionales
+st.write("---")
+st.header('Simulación de preguntas complejas en Mayo Clinic', divider='gray')
 
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
+# Simulación de crecimiento de consultas médicas
 cols = st.columns(4)
 
-for i, country in enumerate(selected_countries):
+preguntas_complejas = ['Diabetes tipo 2', 'Ataque al corazón', 'Hipertensión', 'Cáncer de pulmón']
+crecimientos = [1.3, 1.8, 2.2, 1.9]
+
+for i, pregunta in enumerate(preguntas_complejas):
     col = cols[i % len(cols)]
-
     with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
         st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
+            label=f'{pregunta}',
+            value=f'{crecimientos[i]:.2f}x más consultas',
+            delta=f'{crecimientos[i]:.2f}x',
+            delta_color='normal'
         )
+        
+# Pie de página
+''
+st.write("**Nota**: Este bot médico es solo un simulador y no debe ser utilizado como sustituto de un consejo médico profesional.")
